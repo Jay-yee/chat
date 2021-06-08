@@ -6,25 +6,46 @@ public class ChatServer {
     public static void main(String[] args) {
 
         boolean started = false;
+        ServerSocket ss = null;
+        Socket s = null;
         DataInputStream dis = null;
 
-        try {
 
-            ServerSocket ss = new ServerSocket(8888);
+        try {
+            ss = new ServerSocket(8888);
             started = true;
-            while(started){
+        }catch(BindException erro){
+            System.out.println("This port has been used!");
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            while (started) {
                 boolean connected = false;
-                Socket s = ss.accept();
+                s = ss.accept();
                 connected = true;
                 dis = new DataInputStream(s.getInputStream());
-                while (connected){
+                while (connected) {
                     String str = dis.readUTF();
                     System.out.println(str);
                 }
-                dis.close();
             }
-        } catch (IOException e) {
+        }catch(EOFException e1){
+            System.out.println("Client closed!");
+        }
+        catch ( IOException e) {
             e.printStackTrace();
         }
+        finally {
+            try {
+                if (dis != null) dis.close();
+                if (s != null) s.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+
     }
 }
