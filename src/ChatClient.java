@@ -11,6 +11,7 @@ public class ChatClient extends Frame {
     TextField tftxt = new TextField();
     TextArea taContent = new TextArea();
     Socket s = null;
+    DataOutputStream dos = null;
 
     public static void main(String[] args) {
         new ChatClient().launchFrame();
@@ -25,14 +26,13 @@ public class ChatClient extends Frame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                beClose(); //窗口关闭的前关闭各种资源
                 System.exit(0);
             }
         });
         tftxt.addActionListener(new TfListener());
         setVisible(true);
         connect();
-
-
     }
     //监听内部类
     private class TfListener implements ActionListener{
@@ -44,10 +44,9 @@ public class ChatClient extends Frame {
             tftxt.setText(""); //让每次发送完信息后，输入框里面为空
 
             try {
-                DataOutputStream dos = new DataOutputStream(s.getOutputStream());
                 dos.writeUTF(str);
                 dos.flush();
-                dos.close();
+
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -58,10 +57,23 @@ public class ChatClient extends Frame {
     public void connect() {
         try {
             s = new Socket("127.0.0.1",8888);
+            try {
+                dos = new DataOutputStream(s.getOutputStream()); //连接好服务器，就可以连接管道后面一直用
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println("connected!");
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public void beClose(){
+        try {
+            dos.close();
+            s.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
