@@ -1,10 +1,12 @@
 import java.io.*;
 import java.net.*;
-import java.security.PrivateKey;
+import java.util.*;
 
 public class ChatServer{
     private boolean started = false;
     private ServerSocket ss = null;
+
+    static List<Client> clientsList = new ArrayList<Client>();
 
     public static void main(String[] args) {
         new ChatServer().started();
@@ -25,7 +27,9 @@ public class ChatServer{
                 while (started) {
                     Socket s = ss.accept();
                     System.out.println("A client connetcted!");
-                    new Thread(new Client(s)).start();
+                    Client c = new Client(s);
+                    new Thread(c).start();
+                    clientsList.add(c);
                 }
             }
              catch (IOException ioException) {
@@ -43,29 +47,56 @@ public class ChatServer{
     class Client implements Runnable{
         Socket s = null;
         DataInputStream dis = null;
+        DataOutputStream dos = null;
         private boolean bConnected = false;
+
 
         public Client(Socket s) {
             this.s = s;
             try {
                 dis = new DataInputStream(this.s.getInputStream());
+                dos = new DataOutputStream(this.s.getOutputStream());
                 bConnected = true;
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
         }
 
+        public void sendMessage(String str){
+            try {
+                dos.writeUTF(str);
+            }catch (SocketException e1){
+                System.out.println("对方结束通话");
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         @Override
         public void run() {
+
             try {
                 while (bConnected) {
                     String str = dis.readUTF();
                     System.out.println(str);
+                    for (int i = 0; i < ChatServer.clientsList.size(); i++) {
+                        Client c = ChatServer.clientsList.get(i);
+                        c.sendMessage(str);
+                    }
+
+                    /* for(Iterator<Client> it = ChatServer.clientsList.iterator(); it.hasNext();) {
+                        Client c = it.next();
+                        c.sendMessage(str);
+                    }*/
+
                     if (str == "bye"){
                         bConnected = false;
                     }
                 }
-            }catch (EOFException e){
+            }catch (SocketException e1){
+                System.out.println("对方已经下线");}
+            catch (EOFException e){
                 System.out.println("对方已经下线");}
             catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -73,6 +104,7 @@ public class ChatServer{
             finally {
                 try {
                     if (dis != null) dis.close();
+                    if (dos != null) dos.close();
                     if (s != null) s.close();
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
