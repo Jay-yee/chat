@@ -1,0 +1,4 @@
+server outline:
+main method：just run the method of start；
+start method: just for conneting client and when other client connected server it can run a new thread to communication；
+client class： it proves a way after some client connected server to communicate and implements class of Runnable；
