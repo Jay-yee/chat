@@ -50,7 +50,6 @@ public class ChatServer{
         DataOutputStream dos = null;
         private boolean bConnected = false;
 
-
         public Client(Socket s) {
             this.s = s;
             try {
@@ -65,17 +64,14 @@ public class ChatServer{
         public void sendMessage(String str){
             try {
                 dos.writeUTF(str);
-            }catch (SocketException e1){
+            }catch (IOException e) {
+                ChatServer.clientsList.remove(this); //当一个客户端退出后，删除退出的客户端；
                 System.out.println("对方结束通话");
-            }
-            catch (IOException e) {
-                e.printStackTrace();
             }
         }
 
         @Override
         public void run() {
-
             try {
                 while (bConnected) {
                     String str = dis.readUTF();
